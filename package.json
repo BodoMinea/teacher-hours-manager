@@ -1,7 +1,7 @@
 {
   "name": "school-thm",
   "version": "0.1.0",
-  "description": "Teacher Hours Management",
+  "description": "Simple NodeJS app to manage the teacher list of a school - input the teachers, their main subject and assigned room and how many hours they have with each class. After that you can rearrange & balance the number of hours between teachers with the same subject.",
   "dependencies": {
     "express": "^4.15.2",
     "express-basic-auth": "^1.0.0",
