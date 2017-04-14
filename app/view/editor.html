@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">	
+	<link rel="stylesheet" href="static/css/bootstrap.css">
+    <script src="static/js/angular.js"></script>
+    <script src="static/js/xeditable.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/1.3.1/ui-bootstrap-tpls.min.js"></script>
+    <link rel="stylesheet" href="static/css/xeditable.css">
+    <script src="socket.io/socket.io.js"></script>
+    <link rel="stylesheet" href="static/css/font-awesome.css">
+    <script src="static/js/jquery.js"></script>
+<script src="static/js/bootstrap.js"></script>
+<script src="static/js/editor.js"></script>
+	<title id="pagetitle"></title>
+</head>
+<body ng-app="editor" ng-controller="EditArea" id="identify">
+<div class="container">
+	<br>
+      <!-- Navbar -->
+      <nav class="navbar navbar-default">
+        <div class="container-fluid">
+          <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+              <span class="sr-only">Toggle navigation</span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" id="title" href="#">ICHB Planning</a>
+          </div>
+          <div id="navbar" class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+              <li class="active"><a href="#">Home</a></li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+
+            </ul>
+            <p class="navbar-text navbar-right" id="saved"><i></i></p> 
+          </div><!--/.nav-collapse -->
+        </div><!--/.container-fluid -->
+      </nav>
+
+<div>
+
+  <!-- Tabs -->
+  <ul class="nav nav-tabs" role="tablist">
+    <li role="presentation" class="active"><a href="#teachers" aria-controls="teachers" role="tab" data-toggle="tab">Teachers</a></li>
+    <li role="presentation"><a href="#subjects" aria-controls="subjects" role="tab" data-toggle="tab"> Subjects</a></li>
+    &nbsp;<button type="button" class="btn btn-info" aria-label="Add Class" onclick="save();">
+            <span class="glyphicon glyphicon-glyphicon glyphicon-floppy-save" aria-hidden="true"> Save</span>
+        </button>&nbsp;<div class="btn-group" role="group" aria-label="...">
+  <button type="button" class="btn btn-default" onclick="$('.collapse').collapse('show');"><span class="glyphicon glyphicon-glyphicon glyphicon-collapse-down" aria-hidden="true"> Expand</button>
+  <button type="button" class="btn btn-default" onclick="$('.collapse').collapse('hide');"><span class="glyphicon glyphicon-glyphicon glyphicon-collapse-up" aria-hidden="true"> Collapse</button>
+</div>
+  </ul>
+
+  <!-- Teacher and subject display -->
+  <div class="tab-content">
+    <div role="tabpanel" class="tab-pane active" id="teachers">
+    <br>
+    <div ng-repeat="teacher in xdata track by $index" ng-if="!$first">
+    	<div class="panel panel-default">
+  			<div class="panel-body">
+
+  			<div class="row">
+  <div class="col-md-8"><h3><a href="#" editable-text="teacher.name">{{ teacher.name || "Click to enter name..." }}</a>
+    			<button type="button" class="btn btn-default" aria-label="Add Class" ng-click="addclass($index)">
+  					<span class="glyphicon glyphicon-plus" aria-hidden="true"> Class</span>
+				</button>  
+
+        <a href="#" editable-text="teacher.subject" e-uib-typeahead="subject for subject in xdata[0]['subjects'] | filter:$viewValue | limitTo:8">
+          {{ teacher.subject || 'Subject...' }}
+        </a>
+        -
+        <a href="#" editable-text="teacher.room" e-uib-typeahead="room for room in xdata[0]['rooms'] | filter:$viewValue | limitTo:8">
+    {{ teacher.room || 'Room...' }}
+  </a>
+
+        </h3></div>
+  <div class="col-md-4">
+  	<h3>Count: {{ getCount($index) }} | Prep: {{ getPrep($index) }} <button type="button" class="btn btn-danger" aria-label="Remove Teacher" ng-click="removeteacher($index)">
+            <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+        </button>
+    </h3>
+  </div>
+</div>
+    			
+
+    			<div class="panel-group">
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h4 class="panel-title">
+        <a data-toggle="collapse" href="#collapse{{$index}}">Classes - <i ng-repeat="class in xdata[$parent.$index]['classes'] track by $index">{{class.id}} &nbsp;</i></a>
+      </h4>
+    </div>
+    <div id="collapse{{$index}}" class="panel-collapse collapse">
+      <div class="panel-body">
+
+      	<table class="table table-hover">
+      	<tr>
+            <th>Class</th>
+            <th>Hours</th>
+            <th>Preparation</th>
+            <th>Remove</th>
+            <th>Reassign</th>
+        </tr>
+    		<tr ng-repeat="class in xdata[$parent.$index]['classes'] track by $index">
+    			<td><a href="#" editable-text="class.id">{{ class.id || "Click to enter..." }}</a></td>
+    			<td><a href="#" editable-number="class.count">{{ class.count || 0 }}</a></td>
+          <td><span editable-checkbox="class.prep" e-name="prep" e-ng-true-value="1" e-ng-false-value="0" e-ng-checked="class.prep">
+    {{class.prep == 1 ? 'Yes' : 'No'}}
+</span></td>
+          <td>
+    <button type="button" class="btn btn-warning" aria-label="Remove Class" ng-click="removeclass($parent.$index,$index)">
+            <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+        </button></td>
+        <td><button uib-popover-template="'myPopoverTemplate.html'" popover-title="Reassign {{class.id}} - {{teacher.subject}}" type="button" class="btn btn-default">
+  <span class="glyphicon glyphicon-indent-right" aria-hidden="true"></span>
+</button>
+
+    </td>
+    		</tr>
+
+  		</table>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+
+  			</div>
+		</div>
+    </div>
+
+<button type="button" class="btn btn-default" aria-label="Add Class" ng-click="addteacher($index)">
+  					<span class="glyphicon glyphicon-plus" aria-hidden="true"> Teacher</span>
+				</button> &nbsp; <button type="button" class="btn btn-info" aria-label="Add Class" onclick="save();">
+            <span class="glyphicon glyphicon-glyphicon glyphicon-floppy-save" aria-hidden="true"> Save</span>
+        </button>
+
+    </div>
+    <div role="tabpanel" class="tab-pane" id="subjects">
+      <br>
+      <div ng-repeat="subject in xdata[0]['subjects'] track by $index">
+        <div class="panel panel-default">
+  <div class="panel-body">
+    <b><button type="button" class="btn btn-warning" aria-label="Remove Class" ng-click="removesubject($index)">
+            <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+        </button>&nbsp;{{ subject }}</b> 
+    <br><br>
+    <table class="table">
+        <tr>
+          <th>Teacher Name</th>
+          <th>Total Hours</th>
+          <th>Preparation Hours</th>
+        </tr>
+        <tr ng-repeat="selteacher in xdata track by $index" ng-if="selteacher.subject==$parent.subject">
+          <td>{{selteacher.name}}</td>
+          <td>{{ getCount($index) }}</td>
+          <td>{{ getPrep($index) }}</td>
+        </tr>
+    </table>
+  </div>
+</div>
+      </div>
+      <input type="text" class="form-control" id="subj" style="width:15%;float: left;">&nbsp;
+      <button type="button" class="btn btn-default" aria-label="Add Class" ng-click="addsubject()">
+            <span class="glyphicon glyphicon-plus" aria-hidden="true"> Subject</span>
+        </button>&nbsp;<button type="button" class="btn btn-info" aria-label="Add Class" onclick="save();">
+            <span class="glyphicon glyphicon-glyphicon glyphicon-floppy-save" aria-hidden="true"> Save</span>
+        </button>
+    </div>
+  </div>
+
+</div>
+<div id="debug"></div>
+<br>
+
+</div> <!-- /.container -->
+<br>
+<script type="text/javascript">
+  // request file data to be sent
+	$(document).ready(function(){ socket.emit('load'); })
+</script>
+
+    <script type="text/ng-template" id="myPopoverTemplate.html">
+        <ul class="list-group">
+          <li ng-repeat="steacher in xdata track by $index" ng-if="steacher.subject==teacher.subject&&xdata.indexOf(teacher)!=xdata.indexOf(steacher)" class="list-group-item" ng-click="move(xdata.indexOf(teacher),$parent.$parent.$index,xdata.indexOf(steacher))">{{steacher.name}}</li>
+          </ul>
+    </script>
+</body>
+</html>
